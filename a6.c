@@ -82,6 +82,26 @@ static Node_t * buildtree_loop(FILE *fp)
     return head;
 }
 
+static void output_1(Node_t * head, FILE * fp)
+{
+    if(head==NULL)
+    {
+        return;
+    }
+
+    if (head->left == NULL)
+    {
+        fprintf(fp, "%d(%d,%d)\n", head->label, head->dim.x, head ->dim.y);
+    }
+    else
+    {
+        fprintf(fp, "%c\n", head->cut);
+    }
+    output_1(head->left, fp);
+    output_1(head->right, fp);
+}
+
+
 static void free_t(Node_t* node)
 {
     if(node==NULL)
@@ -98,6 +118,11 @@ int main(int argc, char **argv)
     FILE *fp = fopen(argv[1], "r");
     Node_t * head = buildtree_loop(fp);
     fclose(fp);
+
+    fp = fopen(argv[2], "w");
+    output_1(head, fp);
+    fclose(fp);
+
     free_t(head);
     return 0;
 }
