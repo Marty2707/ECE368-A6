@@ -51,7 +51,7 @@ static Node_t * buildtree_loop(FILE *fp)
     int node_count = linecount(fp);
     int stack_len = 0;
 
-    Node_t **stack = malloc(sizeof(*stack));
+    Node_t **stack = malloc(node_count * sizeof(*stack));
     Node_t *head = NULL;
 
     for (int i = 0; i < node_count; i++)
