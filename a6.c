@@ -46,7 +46,7 @@ static int linecount(FILE *fp)
     return line_count;
 }
 
-static Node_t * buildtree_loop(FILE *fp)
+static Node_t *buildtree_loop(FILE *fp)
 {
     int node_count = linecount(fp);
     int stack_len = 0;
@@ -65,9 +65,9 @@ static Node_t * buildtree_loop(FILE *fp)
             fgetc(fp);
 
             node->right = stack[--stack_len];
-            node->left = stack[--stack_len]; //poppping from stack and setting left and right
-    
-            stack[stack_len++] = node; //pushing node into stack
+            node->left = stack[--stack_len]; // poppping from stack and setting left and right
+
+            stack[stack_len++] = node; // pushing node into stack
         }
         else
         {
@@ -82,16 +82,16 @@ static Node_t * buildtree_loop(FILE *fp)
     return head;
 }
 
-static void output_1(Node_t * head, FILE * fp)
+static void output_1(Node_t *head, FILE *fp)
 {
-    if(head==NULL)
+    if (head == NULL)
     {
         return;
     }
 
     if (head->left == NULL)
     {
-        fprintf(fp, "%d(%d,%d)\n", head->label, head->dim.x, head ->dim.y);
+        fprintf(fp, "%d(%d,%d)\n", head->label, head->dim.x, head->dim.y);
     }
     else
     {
@@ -101,10 +101,9 @@ static void output_1(Node_t * head, FILE * fp)
     output_1(head->right, fp);
 }
 
-
-static void free_t(Node_t* node)
+static void free_t(Node_t *node)
 {
-    if(node==NULL)
+    if (node == NULL)
     {
         return;
     }
@@ -113,17 +112,81 @@ static void free_t(Node_t* node)
     free(node);
 }
 
+static int max(int x, int y)
+{
+    if (x > y)
+    {
+        return x;
+    }
+    else
+    {
+        return y;
+    }
+}
+
+static void compute_dimensions(Node_t *head, FILE *fp)
+{
+    if ((head->left == NULL) && (head->right == NULL))
+    {
+        fprintf(fp, "%d(%d,%d)\n", head->label, head->dim.x, head->dim.y);
+        return;
+    }
+    compute_dimensions(head->left, fp);
+    compute_dimensions(head->right, fp);
+
+    if (head->cut == 'V')
+    {
+
+        head->dim.x = head->left->dim.x + head->right->dim.x;
+        head->dim.y = max(head->left->dim.y, head->right->dim.y);
+    }
+    else if (head->cut == 'H')
+    {
+        head->dim.x = max(head->left->dim.x, head->right->dim.x);
+        head->dim.y = head->left->dim.y + head->right->dim.y;
+    }
+
+    fprintf(fp, "%c(%d,%d)\n", head->cut, head->dim.x, head->dim.y);
+}
+
+static void output_3(Node_t *head, FILE *fp, int x, int y)
+{
+    if ((head->left == NULL) && (head->right == NULL))
+    {
+        fprintf(fp, "%d((%d,%d)(%d,%d))\n", head->label, head->dim.x, head->dim.y, x, y);
+        return;
+    }
+
+    if (head->cut == 'H')
+    {
+        output_3(head->left, fp, x, y + head->right->dim.y);
+        output_3(head->right, fp, x, y);
+    }
+    else if (head->cut == 'V')
+    {
+        output_3(head->left, fp, x, y);
+        output_3(head->right, fp, x + head->left->dim.x, y);
+    }
+}
+
 int main(int argc, char **argv)
 {
     FILE *fp = fopen(argv[1], "r");
-    Node_t * head = buildtree_loop(fp);
+    Node_t *head = buildtree_loop(fp);
     fclose(fp);
 
     fp = fopen(argv[2], "w");
     output_1(head, fp);
     fclose(fp);
 
+    fp = fopen(argv[3], "w");
+    compute_dimensions(head, fp);
+    fclose(fp);
+
+    fp = fopen(argv[4], "w");
+    output_3(head, fp, 0, 0);
+    fclose(fp);
+
     free_t(head);
     return 0;
 }
-
